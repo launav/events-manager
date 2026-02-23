@@ -5,9 +5,8 @@ import { Subject, takeUntil } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-
+import { RealtimeService } from '../../../core/realtime.service.service';
 @Component({
   selector: 'app-events-list',
   standalone: true,
@@ -29,21 +28,37 @@ export class EventsListComponent {
   dateTo: string = ''
   q: string = '';
 
-  constructor(private eventService: EventsService, private router: Router) { }
+  constructor(private eventService: EventsService, private router: Router, private realtime: RealtimeService) { }
 
   ngOnInit(): void {
+    this.getAllEvents();
+
     const msg = history.state?.toast as string | undefined;
     if (msg) {
       this.toast.set(msg);
-
       // limpia el state para que no reaparezca al refrescar
       history.replaceState({}, '');
-
       // auto-ocultar a los 3s
       setTimeout(() => this.toast.set(null), 3000);
     }
 
-    this.getAllEvents();
+    this.realtime.onEventUpdated()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((payload) => {
+        // actualiza solo el evento afectado en el array
+        const current = this.events();
+        const idx = current.findIndex(e => e.id === payload.id);
+        if (idx === -1) return;
+
+        const updated = [...current];
+        updated[idx] = {
+          ...updated[idx],
+          attendees: payload.attendees,
+          capacity: payload.capacity,
+        };
+
+        this.events.set(updated);
+      });
   }
 
   getAllEvents() {

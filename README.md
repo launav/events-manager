@@ -1,5 +1,26 @@
 # AppEventsManager
 
+Aplicación web para la gestión y visualización de eventos desarrollada con **Angular 19**. AppEventsManager permite a los usuarios explorar un catálogo de eventos, filtrar por diferentes criterios, ver detalles de cada evento y recibir actualizaciones en tiempo real gracias a la integración con **Socket.io**.
+
+## Características principales
+
+- **Catálogo de eventos**: Visualización de eventos con información completa (título, categoría, fecha, ubicación, descripción, aforo)
+- **Filtrado avanzado**: Buscar y filtrar eventos por:
+  - Categoría (Taller, Conferencia, Networking, Concierto)
+  - Rango de fechas
+  - Búsqueda por texto
+- **Detalles del evento**: Acceso a información detallada de cada evento
+- **Actualizaciones en tiempo real**: Sincronización automática de cambios en eventos mediante Socket.io
+- **Diseño responsivo**: Interfaz adaptada a diferentes dispositivos
+
+## Tecnologías utilizadas
+
+- **Angular 19**: Framework de desarrollo web
+- **TypeScript 5.7**: Lenguaje de programación
+- **RxJS**: Manejo de operaciones asincrónicas
+- **Socket.io-client**: Comunicación en tiempo real
+- **Jasmine/Karma**: Testing unitario
+
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.20.
 
 ## Development server

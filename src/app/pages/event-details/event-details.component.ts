@@ -6,6 +6,8 @@ import { EventsService } from '../../../core/service.service';
 import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { filter, interval, startWith, switchMap } from 'rxjs';
+import { RealtimeService } from '../../../core/realtime.service.service';
 
 @Component({
   selector: 'app-event-details',
@@ -24,9 +26,28 @@ export class EventDetailsComponent {
 
   private id: string;
 
-  constructor(private route: ActivatedRoute, private eventsService: EventsService, private location: Location, private router: Router) {
+  constructor(private route: ActivatedRoute, private eventsService: EventsService, private location: Location, private router: Router,
+    private realtime: RealtimeService
+  ) {
     this.id = this.route.snapshot.paramMap.get('id') ?? '';
     this.load();
+
+    this.realtime.joinEvent(this.id);
+
+    this.realtime.onEventUpdated()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((payload) => {
+        if (payload.id !== this.id) return;
+
+        const current = this.event();
+        if (!current) return;
+
+        this.event.set({
+          ...current,
+          attendees: payload.attendees,
+          capacity: payload.capacity,
+        });
+      });
   }
 
   load(): void {
@@ -42,36 +63,42 @@ export class EventDetailsComponent {
       });
   }
 
- register(): void {
-  const ev = this.event();
-  if (!ev) return;
+  register(): void {
+    const ev = this.event();
+    if (!ev) return;
 
-  if (ev.attendees >= ev.capacity) {
-    this.error.set('Este evento está completo.');
-    return;
+    if (ev.attendees >= ev.capacity) {
+      this.error.set('Este evento está completo.');
+      return;
+    }
+
+    this.registering.set(true);
+    this.error.set(null);
+
+    this.eventsService.register(this.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.router.navigate(['/events'], {
+            state: { toast: 'Te has inscrito correctamente.' }
+          });
+        },
+        error: (err) => {
+          if (err?.status === 409) this.error.set('Este evento está completo.');
+          else if (err?.status === 404) this.error.set('Evento no encontrado.');
+          else this.error.set('No se pudo registrar la inscripción.');
+
+          this.registering.set(false);
+        },
+        complete: () => this.registering.set(false),
+      });
   }
 
-  this.registering.set(true);
-  this.error.set(null);
-
-  this.eventsService.register(this.id)
-    .pipe(takeUntilDestroyed(this.destroyRef))
-    .subscribe({
-      next: () => {
-        this.router.navigate(['/events'], {
-          state: { toast: 'Te has inscrito correctamente.' }
-        });
-      },
-      error: (err) => {
-        // Si el backend responde 409 FULL, podemos afinar el mensaje:
-        if (err?.status === 409) this.error.set('Este evento está completo.');
-        else this.error.set('No se pudo registrar la inscripción.');
-        this.registering.set(false);
-      },
-      complete: () => this.registering.set(false),
-    });
-}
   goBack(): void {
     this.location.back();
+  }
+
+  ngOnDestroy(): void {
+    this.realtime.leaveEvent(this.id);
   }
 }

@@ -1,0 +1,76 @@
+<section class="page">
+
+  <div class="toast" *ngIf="toast()">
+    {{ toast() }}
+  </div>
+
+  <header class="header">
+    <h1>Próximos eventos</h1>
+
+    <div class="filters">
+
+      <!-- Categoría -->
+      <select [(ngModel)]="category" (ngModelChange)="getAllEvents()">
+        <option value="">Todas las categorías</option>
+        <option value="Taller">Taller</option>
+        <option value="Conferencia">Conferencia</option>
+        <option value="Networking">Networking</option>
+        <option value="Concierto">Concierto</option>
+      </select>
+
+      <!-- Fecha desde -->
+      <input type="date" [(ngModel)]="dateFrom" (ngModelChange)="getAllEvents()" />
+
+      <!-- Fecha hasta -->
+      <input type="date" [(ngModel)]="dateTo" (ngModelChange)="getAllEvents()" />
+
+      <!-- Buscador -->
+      <input type="text" placeholder="Buscar por título o ubicación..." [(ngModel)]="q"
+        (ngModelChange)="getAllEvents()" />
+
+      <button type="button" (click)="clear()">
+        Limpiar
+      </button>
+    </div>
+  </header>
+
+  <!-- Estados -->
+  <div class="state" *ngIf="loading">
+    Cargando eventos...
+  </div>
+
+  <div class="state error" *ngIf="error()">
+    {{ error() }}
+  </div>
+
+  <!-- Listado -->
+  <div class="grid" *ngIf="!loading && !error()">
+
+    <article class="card" *ngFor="let ev of events()" (click)="goToDetail(ev.id)" tabindex="0">
+      <div class="card__top">
+        <h3>{{ ev.title }}</h3>
+        <span class="badge">{{ ev.category }}</span>
+      </div>
+
+      <p class="meta">
+        {{ ev.date }} · {{ ev.location }}
+      </p>
+
+      <p class="desc">
+        {{ ev.description }}
+      </p>
+
+      <div class="footer">
+        <span class="attendees">
+          {{ ev.attendees }} / {{ ev.capacity }} inscritos
+        </span>
+      </div>
+    </article>
+
+  </div>
+
+  <div class="state" *ngIf="!loading && !error() && events().length === 0">
+    No hay eventos disponibles.
+  </div>
+
+</section>

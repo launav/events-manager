@@ -1,0 +1,28 @@
+<section class="page">
+  <div *ngIf="loading()">Cargando…</div>
+  <div class="error" *ngIf="error()">{{ error() }}</div>
+
+  <button class="back-btn" type="button" (click)="goBack()">
+    ← Volver
+  </button>
+
+  <ng-container *ngIf="event() as ev">
+    <header class="header">
+      <h1>{{ ev.title }}</h1>
+      <div class="meta">
+        <span class="badge">{{ ev.category }}</span>
+        <span>{{ ev.date }} · {{ ev.location }}</span>
+      </div>
+    </header>
+
+    <p class="desc">{{ ev.description }}</p>
+
+    <div class="card">
+      <p><strong>Inscritos:</strong> {{ ev.attendees }} / {{ ev.capacity }}</p>
+
+      <button type="button" (click)="register()" [disabled]="registering() || ev.attendees >= ev.capacity">
+        {{ registering() ? 'Inscribiendo…' : (ev.attendees >= ev.capacity ? 'Completo' : 'Inscribirse') }}
+      </button>
+    </div>
+  </ng-container>
+</section>
